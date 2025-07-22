@@ -1,0 +1,10 @@
+# Build artifacts
+*.o
+*.pcm
+chess
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~ 
