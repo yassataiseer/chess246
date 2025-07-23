@@ -12,6 +12,7 @@
 #include <memory>
 #include <ostream>
 #include <algorithm>
+#include <iostream> // Added for debug output
 
 Board::Board() : grid(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), currentTurn{Colour::White} {
   // Initialize the board with pieces in their starting positions
@@ -52,6 +53,58 @@ std::shared_ptr<Piece> Board::pieceAt(Pos p) const {
   return grid[p.rank][p.file];
 }
 
+bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
+  // Create a new board with the same setup
+  Board tempBoard;
+  tempBoard.grid = grid;  // Copy the grid
+  tempBoard.currentTurn = currentTurn;  // Copy the current turn
+  
+  // Get the piece at the source position
+  auto piece = tempBoard.pieceAt(src);
+  if (!piece) return false;
+  
+  // Make the move on the temporary board
+  tempBoard.grid[dst.rank][dst.file] = piece;
+  tempBoard.grid[src.rank][src.file] = nullptr;
+  
+  // Check if the player is in check after the move
+  return !tempBoard.isInCheck(playerColour);
+}
+
+bool Board::isCheckmate(Colour c) const {
+  // First check if the player is in check
+  if (!isInCheck(c)) {
+    return false;
+  }
+  
+  // Try all possible moves for all pieces of the player
+  for (int srcRank = 0; srcRank < 8; ++srcRank) {
+    for (int srcFile = 0; srcFile < 8; ++srcFile) {
+      Pos src{srcFile, srcRank};
+      auto piece = pieceAt(src);
+      
+      // Skip if no piece or not the player's piece
+      if (!piece || piece->colour() != c) {
+        continue;
+      }
+      
+      // Get all legal moves for this piece
+      auto legalMoves = piece->legalMoves(*this, src);
+      
+      // Try each move to see if it gets out of check
+      for (const auto& dst : legalMoves) {
+        if (simulateMove(src, dst, c)) {
+          // Found a move that gets out of check
+          return false;
+        }
+      }
+    }
+  }
+  
+  // No move can get the player out of check
+  return true;
+}
+
 bool Board::move(Pos src, Pos dst) {
   // Check if source position is valid and has a piece
   auto piece = pieceAt(src);
@@ -67,6 +120,11 @@ bool Board::move(Pos src, Pos dst) {
   if (std::find_if(legalMoves.begin(), legalMoves.end(),
                   [dst](const Pos& p) { return p.file == dst.file && p.rank == dst.rank; }) 
       == legalMoves.end()) {
+    return false;
+  }
+  
+  // Check if the move would leave the player in check
+  if (!simulateMove(src, dst, currentTurn)) {
     return false;
   }
   

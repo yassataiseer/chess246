@@ -55,6 +55,22 @@ bool GameController::processCommand(const std::string& cmd) {
     
     if (board->move(src, dst)) {
       board->draw(std::cout);
+      
+      // After a move, the current player is the one whose turn it is now
+      // The piece at the destination belongs to the player who just moved
+      Colour previousPlayerColour = board->pieceAt(dst)->colour();
+      Colour currentPlayerColour = (previousPlayerColour == Colour::White) ? Colour::Black : Colour::White;
+      
+      // Check if the current player is in check
+      if (board->isInCheck(currentPlayerColour)) {
+        // Check if it's checkmate
+        if (board->isCheckmate(currentPlayerColour)) {
+          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!\n";
+          gameInProgress = false;
+        } else {
+          std::cout << "Check!\n";
+        }
+      }
     } else {
       std::cout << "Invalid move.\n";
     }
