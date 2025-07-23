@@ -15,10 +15,12 @@ public:
   void draw(std::ostream& os) const;       // ASCII draw
   std::shared_ptr<Piece> pieceAt(Pos p) const;
   bool isInCheck(Colour c) const;
+  bool isCheckmate(Colour c) const;        // check if player is in checkmate
   bool isValidPos(Pos p) const;
 private:
   std::vector<std::vector<std::shared_ptr<Piece>>> grid;
   Colour currentTurn;
+  bool simulateMove(Pos src, Pos dst, Colour playerColour) const; // simulate move to check if it leaves player in check
 };
 
 #endif // BOARD_H 
