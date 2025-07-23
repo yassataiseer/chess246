@@ -63,18 +63,8 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
   auto piece = tempBoard.pieceAt(src);
   if (!piece) return false;
   
-  // Special case for pawn promotion (auto-promote to Queen)
-  bool isPawnPromotion = false;
-  if (auto pawn = dynamic_cast<Pawn*>(piece.get())) {
-    if ((piece->colour() == Colour::White && dst.rank == 7) ||
-        (piece->colour() == Colour::Black && dst.rank == 0)) {
-      isPawnPromotion = true;
-    }
-  }
-  
   // Make the move on the temporary board
-  tempBoard.grid[dst.rank][dst.file] = isPawnPromotion ? 
-    std::make_shared<Queen>(piece->colour()) : piece;
+  tempBoard.grid[dst.rank][dst.file] = piece;
   tempBoard.grid[src.rank][src.file] = nullptr;
   
   // Check if the player is in check after the move
