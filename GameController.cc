@@ -36,6 +36,49 @@ bool GameController::processCommand(const std::string& cmd) {
     } else {
       std::cout << "Invalid game mode. Only 'game human human' is supported.\n";
     }
+  } else if (command == "castle") {
+    if (!gameInProgress) {
+      std::cout << "No game in progress. Use 'game human human' to start.\n";
+      return true;
+    }
+    
+    std::string side;
+    iss >> side;
+    
+    bool success = false;
+    if (side == "kingside" || side == "k") {
+      // Determine king's position based on current player
+      int rank = (board->getCurrentTurn() == Colour::White) ? 0 : 7;
+      Pos kingPos{4, rank};
+      Pos destPos{6, rank};
+      success = board->move(kingPos, destPos);
+    } else if (side == "queenside" || side == "q") {
+      // Determine king's position based on current player
+      int rank = (board->getCurrentTurn() == Colour::White) ? 0 : 7;
+      Pos kingPos{4, rank};
+      Pos destPos{2, rank};
+      success = board->move(kingPos, destPos);
+    } else {
+      std::cout << "Invalid castling command. Use 'castle kingside' or 'castle queenside'.\n";
+      return true;
+    }
+    
+    if (success) {
+      board->draw(std::cout);
+      
+      // Check for check/checkmate
+      Colour currentPlayerColour = board->getCurrentTurn();
+      if (board->isInCheck(currentPlayerColour)) {
+        if (board->isCheckmate(currentPlayerColour)) {
+          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!\n";
+          gameInProgress = false;
+        } else {
+          std::cout << "Check!\n";
+        }
+      }
+    } else {
+      std::cout << "Invalid castling move.\n";
+    }
   } else if (command == "move") {
     if (!gameInProgress) {
       std::cout << "No game in progress. Use 'game human human' to start.\n";
@@ -68,14 +111,7 @@ bool GameController::processCommand(const std::string& cmd) {
       
       // After a move, the current player is the one whose turn it is now
       // The piece at the destination belongs to the player who just moved
-      auto piece = board->pieceAt(dst);
-      if (!piece) {
-        // This shouldn't happen in a valid move, but let's be safe
-        return true;
-      }
-      
-      Colour previousPlayerColour = piece->colour();
-      Colour currentPlayerColour = (previousPlayerColour == Colour::White) ? Colour::Black : Colour::White;
+      Colour currentPlayerColour = board->getCurrentTurn();
       
       // Check if the current player is in check
       if (board->isInCheck(currentPlayerColour)) {
@@ -103,7 +139,7 @@ bool GameController::processCommand(const std::string& cmd) {
     // Empty command, just continue
   } else {
     std::cout << "Unknown command: " << command << "\n";
-    std::cout << "Available commands: game, move, resign\n";
+    std::cout << "Available commands: game, move, castle, resign\n";
   }
   
   return true;

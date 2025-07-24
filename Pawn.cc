@@ -31,12 +31,18 @@ std::vector<Pos> Pawn::legalMoves(Board const& b, Pos from) const {
     }
   }
   
-  // Capture moves
+  // Capture moves (including en passant)
   for (int df : {-1, 1}) {
     Pos capture{from.file + df, from.rank + direction};
     if (b.isValidPos(capture)) {
+      // Regular capture
       auto piece = b.pieceAt(capture);
       if (piece && piece->colour() != colour()) {
+        moves.push_back(capture);
+      }
+      
+      // En passant capture
+      if (!piece && b.canEnPassantCapture(from, capture)) {
         moves.push_back(capture);
       }
     }
