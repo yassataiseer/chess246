@@ -42,8 +42,8 @@ bool GameController::processCommand(const std::string& cmd) {
       return true;
     }
     
-    std::string src_str, dst_str;
-    iss >> src_str >> dst_str;
+    std::string src_str, dst_str, promotion_str;
+    iss >> src_str >> dst_str >> promotion_str;
     
     Pos src = parsePos(src_str);
     Pos dst = parsePos(dst_str);
@@ -53,12 +53,28 @@ bool GameController::processCommand(const std::string& cmd) {
       return true;
     }
     
-    if (board->move(src, dst)) {
+    bool moveSuccess = false;
+    
+    // Check if promotion piece is specified
+    if (!promotion_str.empty() && promotion_str.length() == 1) {
+      char promotionPiece = promotion_str[0];
+      moveSuccess = board->move(src, dst, promotionPiece);
+    } else {
+      moveSuccess = board->move(src, dst);
+    }
+    
+    if (moveSuccess) {
       board->draw(std::cout);
       
       // After a move, the current player is the one whose turn it is now
       // The piece at the destination belongs to the player who just moved
-      Colour previousPlayerColour = board->pieceAt(dst)->colour();
+      auto piece = board->pieceAt(dst);
+      if (!piece) {
+        // This shouldn't happen in a valid move, but let's be safe
+        return true;
+      }
+      
+      Colour previousPlayerColour = piece->colour();
       Colour currentPlayerColour = (previousPlayerColour == Colour::White) ? Colour::Black : Colour::White;
       
       // Check if the current player is in check

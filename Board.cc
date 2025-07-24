@@ -105,7 +105,17 @@ bool Board::isCheckmate(Colour c) const {
   return true;
 }
 
-bool Board::move(Pos src, Pos dst) {
+std::shared_ptr<Piece> Board::createPromotedPiece(char pieceType, Colour c) {
+  switch (toupper(pieceType)) {
+    case 'Q': return std::make_shared<Queen>(c);
+    case 'R': return std::make_shared<Rook>(c);
+    case 'B': return std::make_shared<Bishop>(c);
+    case 'N': return std::make_shared<Knight>(c);
+    default: return std::make_shared<Queen>(c); // Default to Queen if invalid
+  }
+}
+
+bool Board::move(Pos src, Pos dst, char promotionPiece) {
   // Check if source position is valid and has a piece
   auto piece = pieceAt(src);
   if (!piece) return false;
@@ -128,7 +138,7 @@ bool Board::move(Pos src, Pos dst) {
     return false;
   }
   
-  // Special case for pawn promotion (auto-promote to Queen)
+  // Check if this is a valid pawn promotion
   bool isPawnPromotion = false;
   if (auto pawn = dynamic_cast<Pawn*>(piece.get())) {
     if ((piece->colour() == Colour::White && dst.rank == 7) ||
@@ -138,14 +148,22 @@ bool Board::move(Pos src, Pos dst) {
   }
   
   // Make the move
-  grid[dst.rank][dst.file] = isPawnPromotion ? 
-    std::make_shared<Queen>(piece->colour()) : piece;
+  if (isPawnPromotion) {
+    grid[dst.rank][dst.file] = createPromotedPiece(promotionPiece, piece->colour());
+  } else {
+    grid[dst.rank][dst.file] = piece;
+  }
   grid[src.rank][src.file] = nullptr;
   
   // Switch turns
   currentTurn = (currentTurn == Colour::White) ? Colour::Black : Colour::White;
   
   return true;
+}
+
+bool Board::move(Pos src, Pos dst) {
+  // For backward compatibility, default to Queen promotion
+  return move(src, dst, 'Q');
 }
 
 bool Board::isInCheck(Colour c) const {
