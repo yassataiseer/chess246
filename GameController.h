@@ -17,6 +17,7 @@ public:
 private:
   std::shared_ptr<Board> board;
   bool gameInProgress;
+  bool setupMode;                          // Flag for setup mode
   double whiteScore = 0.0;
   double blackScore = 0.0;
   
@@ -47,6 +48,8 @@ private:
   void incrementScore(Colour winner);
   void incrementDrawScore();
   bool processCommand(const std::string& cmd);
+  bool processSetupCommand(const std::string& cmd); // Process setup mode commands
+  bool validateBoard() const;              // Validate board configuration for setup mode
   Pos parsePos(const std::string& pos);
 };
 
