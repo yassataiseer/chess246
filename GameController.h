@@ -3,11 +3,46 @@
 
 #include "Board.h"
 #include "Pos.h"
+#include "Piece.h"
+#include "King.h"
+#include "Pawn.h"
+#include "Rook.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Queen.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <memory>
 #include <string>
 #include <iostream>
+#include <vector>
+#include <random>
+
+// Forward declarations
+class Move;
+
+// Enum for player types
+enum class PlayerType {
+  Human,
+  Computer
+};
+
+// Computer difficulty levels
+enum class ComputerLevel {
+  Level1, // Random legal moves
+  Level2, // Prefers capturing moves and checks
+  Level3, // Prefers avoiding capture, capturing moves, and checks
+  Level4  // More sophisticated (future implementation)
+};
+
+// Structure to represent a move
+struct Move {
+  Pos from;
+  Pos to;
+  char promotion;
+  
+  Move(Pos f, Pos t, char p = '\0') : from(f), to(t), promotion(p) {}
+};
 
 class GameController {
 public:
@@ -17,17 +52,25 @@ public:
 private:
   std::shared_ptr<Board> board;
   bool gameInProgress;
-  bool setupMode;                          // Flag for setup mode
-  double whiteScore = 0.0;
-  double blackScore = 0.0;
+  bool gameOver;
+  bool setupMode;
+  double whiteScore;
+  double blackScore;
   
+  // Player types and computer levels
+  PlayerType whitePlayerType;
+  PlayerType blackPlayerType;
+  ComputerLevel whiteComputerLevel;
+  ComputerLevel blackComputerLevel;
+  mutable std::mt19937 rng;
+
   // X11 Graphics members
-  Display* display = nullptr;
-  Window window = 0;
-  GC gc = nullptr;
-  int cellSize = 70;
-  bool graphicsActive = false;
-  
+  Display* display;
+  Window window;
+  GC gc;
+  int cellSize;
+  bool graphicsActive;
+
   // Colors
   unsigned long whiteSquareColor;
   unsigned long blackSquareColor;
@@ -48,9 +91,24 @@ private:
   void incrementScore(Colour winner);
   void incrementDrawScore();
   bool processCommand(const std::string& cmd);
-  bool processSetupCommand(const std::string& cmd); // Process setup mode commands
-  bool validateBoard() const;              // Validate board configuration for setup mode
+  bool processSetupCommand(const std::string& cmd);
+  bool validateBoard() const;
   Pos parsePos(const std::string& pos);
+  
+  // Computer player methods
+  bool isComputerTurn() const;
+  void makeComputerMove();
+  std::vector<Move> getAllLegalMoves(Colour colour) const;
+  Move getRandomMove(const std::vector<Move>& moves) const;
+  Move getBestMoveLevel2(const std::vector<Move>& moves) const;
+  Move getBestMoveLevel3(const std::vector<Move>& moves) const;
+  Move getBestMoveLevel4(const std::vector<Move>& moves) const;
+  int evaluateMove(const Move& move) const;
+  bool isCapturingMove(const Move& move) const;
+  bool isCheckingMove(const Move& move) const;
+  bool movePutsInDanger(const Move& move) const;
+  int evaluatePosition(const Board& board, Colour perspective) const;
+  int getPieceValue(char pieceSymbol) const;
 };
 
 #endif // GAME_CONTROLLER_H 

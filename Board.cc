@@ -765,49 +765,56 @@ Colour Board::getCurrentTurn() const {
   return currentTurn;
 }
 
-void Board::placePiece(Pos pos, char pieceType, Colour colour) {
-  if (!isValidPos(pos)) return;
-  
-  std::shared_ptr<Piece> piece = nullptr;
-  
-  switch (toupper(pieceType)) {
-    case 'P': piece = std::make_shared<Pawn>(colour); break;
-    case 'N': piece = std::make_shared<Knight>(colour); break;
-    case 'B': piece = std::make_shared<Bishop>(colour); break;
-    case 'R': piece = std::make_shared<Rook>(colour); break;
-    case 'Q': piece = std::make_shared<Queen>(colour); break;
-    case 'K': piece = std::make_shared<King>(colour); break;
-    default: return;
-  }
-  
-  grid[pos.rank][pos.file] = piece;
-}
-
-void Board::removePiece(Pos pos) {
-  if (!isValidPos(pos)) return;
-  grid[pos.rank][pos.file] = nullptr;
-}
-
-void Board::setCurrentTurn(Colour c) {
-  currentTurn = c;
-}
-
+// Clear the board for setup mode
 void Board::clearBoard() {
-  // Clear all pieces from the board
+  // Clear the grid
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       grid[rank][file] = nullptr;
     }
   }
   
-  // Reset castling flags
+  // Reset tracking variables
+  currentTurn = Colour::White;
   whiteKingMoved = false;
   blackKingMoved = false;
   whiteRookAMoved = false;
   whiteRookHMoved = false;
   blackRookAMoved = false;
   blackRookHMoved = false;
-  
-  // Reset en passant tracking
   lastPawnDoubleMove = {-1, -1};
+}
+
+// Place a piece during setup
+void Board::placePiece(Pos pos, char pieceType, Colour colour) {
+  if (!isValidPos(pos)) return;
+  
+  std::shared_ptr<Piece> piece = nullptr;
+  
+  // Create the appropriate piece based on the type
+  switch (toupper(pieceType)) {
+    case 'P': piece = std::make_shared<Pawn>(colour); break;
+    case 'R': piece = std::make_shared<Rook>(colour); break;
+    case 'N': piece = std::make_shared<Knight>(colour); break;
+    case 'B': piece = std::make_shared<Bishop>(colour); break;
+    case 'Q': piece = std::make_shared<Queen>(colour); break;
+    case 'K': piece = std::make_shared<King>(colour); break;
+    default: return; // Invalid piece type
+  }
+  
+  // Place the piece on the board
+  grid[pos.rank][pos.file] = piece;
+}
+
+// Remove a piece during setup
+void Board::removePiece(Pos pos) {
+  if (!isValidPos(pos)) return;
+  
+  // Remove the piece
+  grid[pos.rank][pos.file] = nullptr;
+}
+
+// Set the current turn
+void Board::setCurrentTurn(Colour c) {
+  currentTurn = c;
 } 

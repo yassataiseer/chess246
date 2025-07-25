@@ -25,16 +25,19 @@ public:
   Colour getCurrentTurn() const;           // get the current player's color
   
   // Setup mode methods
-  void placePiece(Pos pos, char pieceType, Colour colour);  // place a piece during setup
-  void removePiece(Pos pos);                               // remove a piece during setup
-  void setCurrentTurn(Colour c);                           // set the current player's turn
-  void clearBoard();                                       // clear the board for setup mode
+  void clearBoard();                       // clear the board for setup
+  void placePiece(Pos pos, char pieceType, Colour colour); // place a piece during setup
+  void removePiece(Pos pos);               // remove a piece during setup
+  void setCurrentTurn(Colour c);           // set the current turn
   
   // Helper methods for King's legal moves
   bool hasKingMoved(Colour c) const;
   bool hasRookMoved(Colour c, bool kingSide) const;
   bool isPathClear(Pos from, Pos to) const;
   bool isSquareAttacked(Pos square, Colour defendingColour) const;
+  
+  // Moved from private to public for use by GameController
+  bool simulateMove(Pos src, Pos dst, Colour playerColour) const; // simulate move to check if it leaves player in check
 
 private:
   std::vector<std::vector<std::shared_ptr<Piece>>> grid;
@@ -51,7 +54,6 @@ private:
   // Tracking for en passant
   Pos lastPawnDoubleMove = {-1, -1};  // Invalid position by default
 
-  bool simulateMove(Pos src, Pos dst, Colour playerColour) const; // simulate move to check if it leaves player in check
   std::shared_ptr<Piece> createPromotedPiece(char pieceType, Colour c); // create a piece for promotion
   
   // Helper methods for special moves
