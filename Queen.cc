@@ -14,7 +14,6 @@ char Queen::symbol() const {
 std::vector<Pos> Queen::legalMoves(Board const& b, Pos from) const {
   std::vector<Pos> moves;
   
-  // All eight directions: horizontal, vertical, and diagonal
   const std::vector<std::pair<int, int>> directions = {
     {1, 0}, {1, -1}, {0, -1}, {-1, -1},
     {-1, 0}, {-1, 1}, {0, 1}, {1, 1}
@@ -32,7 +31,7 @@ std::vector<Pos> Queen::legalMoves(Board const& b, Pos from) const {
         if (piece->colour() != colour()) {
           moves.push_back(dest);
         }
-        break; // Can't move past a piece
+        break;
       }
     }
   }

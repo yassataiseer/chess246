@@ -32,7 +32,6 @@ std::vector<Pos> King::legalMoves(Board const& b, Pos from) const {
   
   // Check for castling moves
   if (!b.hasKingMoved(colour()) && !b.isInCheck(colour())) {
-    // Initial king position
     int rank = (colour() == Colour::White) ? 0 : 7;
     
     // Kingside castling

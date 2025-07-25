@@ -14,7 +14,6 @@ char Knight::symbol() const {
 std::vector<Pos> Knight::legalMoves(Board const& b, Pos from) const {
   std::vector<Pos> moves;
   
-  // All possible knight moves
   const std::vector<std::pair<int, int>> offsets = {
     {1, 2}, {2, 1}, {2, -1}, {1, -2},
     {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}

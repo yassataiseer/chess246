@@ -6,7 +6,6 @@
 #include <vector>
 #include <memory>
 
-// Forward declaration
 class Board;
 
 class Piece {
@@ -20,4 +19,4 @@ private:
   Colour c;
 };
 
-#endif // PIECE_H 
+#endif 

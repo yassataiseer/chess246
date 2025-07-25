@@ -18,29 +18,15 @@
 #include <vector>
 #include <random>
 
-// Forward declarations
 class Move;
 
-// Enum for player types
-enum class PlayerType {
-  Human,
-  Computer
-};
+enum class PlayerType { Human, Computer };
+enum class ComputerLevel { Level1, Level2, Level3, Level4 };
 
-// Computer difficulty levels
-enum class ComputerLevel {
-  Level1, // Random legal moves
-  Level2, // Prefers capturing moves and checks
-  Level3, // Prefers avoiding capture, capturing moves, and checks
-  Level4  // More sophisticated (future implementation)
-};
-
-// Structure to represent a move
 struct Move {
   Pos from;
   Pos to;
   char promotion;
-  
   Move(Pos f, Pos t, char p = '\0') : from(f), to(t), promotion(p) {}
 };
 
@@ -48,7 +34,8 @@ class GameController {
 public:
   GameController();
   ~GameController();
-  void run();                              // REPL: read commands + dispatch
+  void run();
+
 private:
   std::shared_ptr<Board> board;
   bool gameInProgress;
@@ -56,46 +43,41 @@ private:
   bool setupMode;
   double whiteScore;
   double blackScore;
-  
-  // Player types and computer levels
+
   PlayerType whitePlayerType;
   PlayerType blackPlayerType;
   ComputerLevel whiteComputerLevel;
   ComputerLevel blackComputerLevel;
   mutable std::mt19937 rng;
 
-  // X11 Graphics members
   Display* display;
   Window window;
   GC gc;
   int cellSize;
   bool graphicsActive;
 
-  // Colors
   unsigned long whiteSquareColor;
   unsigned long blackSquareColor;
   unsigned long whitePieceColor;
   unsigned long blackPieceColor;
   unsigned long textColor;
-  
-  // Graphics methods
+
   bool initGraphics();
   void renderGraphics() const;
   bool processGraphicsEvents();
   void closeGraphics();
   void drawPieceSprite(int x, int y, char symbol) const;
-  
-  // Game logic methods
+
   void printFinalScore() const;
   void printScore() const;
   void incrementScore(Colour winner);
   void incrementDrawScore();
   bool processCommand(const std::string& cmd);
+  Pos parsePos(const std::string& pos);
+
   bool processSetupCommand(const std::string& cmd);
   bool validateBoard() const;
-  Pos parsePos(const std::string& pos);
-  
-  // Computer player methods
+
   bool isComputerTurn() const;
   void makeComputerMove();
   std::vector<Move> getAllLegalMoves(Colour colour) const;
@@ -103,7 +85,6 @@ private:
   Move getBestMoveLevel2(const std::vector<Move>& moves) const;
   Move getBestMoveLevel3(const std::vector<Move>& moves) const;
   Move getBestMoveLevel4(const std::vector<Move>& moves) const;
-  int evaluateMove(const Move& move) const;
   bool isCapturingMove(const Move& move) const;
   bool isCheckingMove(const Move& move) const;
   bool movePutsInDanger(const Move& move) const;
@@ -111,4 +92,4 @@ private:
   int getPieceValue(char pieceSymbol) const;
 };
 
-#endif // GAME_CONTROLLER_H 
+#endif 

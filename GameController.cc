@@ -28,7 +28,6 @@ GameController::GameController()
     gc{nullptr},
     cellSize{70},
     graphicsActive{false} {
-  // Initialize color scheme
   whiteSquareColor = 0xF0D9B5;
   blackSquareColor = 0xB58863;
   whitePieceColor = 0xFFFFFF;
@@ -117,7 +116,6 @@ void GameController::drawPieceSprite(int x, int y, char symbol) const {
     // Size of each pixel block
     int pixelSize = cellSize / 10;
     
-    // Center in square - these are 5x7 pixel letters
     int offsetX = x + (cellSize - pixelSize * 5) / 2;
     int offsetY = y + (cellSize - pixelSize * 7) / 2;
     
@@ -195,114 +193,112 @@ void GameController::drawPieceSprite(int x, int y, char symbol) const {
         default: return; // Invalid symbol
     }
     
-    // Draw the pixelated letter - make pixels touch each other for a continuous look
     for (int row = 0; row < 7; row++) {
         for (int col = 0; col < 5; col++) {
             if (letterPattern[row][col] == 1) {
                 XFillRectangle(display, window, gc,
                     offsetX + col * pixelSize,
                     offsetY + row * pixelSize,
-                    pixelSize,  // Full pixel size with no gaps
-                    pixelSize); // Full pixel size with no gaps
+                    pixelSize,
+                    pixelSize);
             }
         }
     }
 }
 
 void GameController::renderGraphics() const {
-    if (!display || !board) return;
-    
-    // Draw board squares
-    for (int rank = 0; rank < 8; ++rank) {
-        for (int file = 0; file < 8; ++file) {
-            // Calculate position with offset for coordinates
-            int x = file * cellSize + 20;  // Offset for rank numbers on left
-            int y = (7 - rank) * cellSize + 20;  // Offset for file letters on bottom
-            
-            // Set square color
-            unsigned long squareColor = ((rank + file) % 2 == 0) ? whiteSquareColor : blackSquareColor;
-            XSetForeground(display, gc, squareColor);
-            
-            // Draw square
-            XFillRectangle(display, window, gc, x, y, cellSize, cellSize);
-            
-            // Draw piece if present
-            auto piece = board->pieceAt({file, rank});
-            if (piece) {
-                // Get piece symbol
-                char symbol = piece->symbol();
-                
-                // Draw the piece sprite
-                drawPieceSprite(x, y, symbol);
-            }
-        }
-    }
-    
-    // Draw file labels (a-h)
-    XSetForeground(display, gc, textColor);
-    for (int file = 0; file < 8; ++file) {
-        char label = 'a' + file;
-        
-        // Draw at bottom
-        XDrawString(display, window, gc,
-                   file * cellSize + cellSize/2 + 20,  // Add offset
-                   8 * cellSize + 35,  // Below the board
-                   &label, 1);
-    }
-    
-    // Draw rank labels (1-8)
-    for (int rank = 0; rank < 8; ++rank) {
-        char label = '1' + rank;
-        
-        // Draw at left side
-        XDrawString(display, window, gc,
-                   10,  // Left of the board
-                   (7 - rank) * cellSize + cellSize/2 + 20,  // Add offset
-                   &label, 1);
-        
-        // Draw at right side as well
-        XDrawString(display, window, gc,
-                   8 * cellSize + 30,  // Right of the board
-                   (7 - rank) * cellSize + cellSize/2 + 20,  // Add offset
-                   &label, 1);
-    }
-    
-    // Flush all pending operations
-    XFlush(display);
+  if (!display || !board) return;
+  
+  // Draw board squares
+  for (int rank = 0; rank < 8; ++rank) {
+      for (int file = 0; file < 8; ++file) {
+          // Calculate position with offset for coordinates
+          int x = file * cellSize + 20;  // Offset for rank numbers on left
+          int y = (7 - rank) * cellSize + 20;  // Offset for file letters on bottom
+          
+          // Set square color
+          unsigned long squareColor = ((rank + file) % 2 == 0) ? whiteSquareColor : blackSquareColor;
+          XSetForeground(display, gc, squareColor);
+          
+          // Draw square
+          XFillRectangle(display, window, gc, x, y, cellSize, cellSize);
+          
+          // Draw piece if present
+          auto piece = board->pieceAt({file, rank});
+          if (piece) {
+              // Get piece symbol
+              char symbol = piece->symbol();
+              
+              // Draw the piece sprite
+              drawPieceSprite(x, y, symbol);
+          }
+      }
+  }
+  
+  // Draw file labels (a-h)
+  XSetForeground(display, gc, textColor);
+  for (int file = 0; file < 8; ++file) {
+      char label = 'a' + file;
+      
+      // Draw at bottom
+      XDrawString(display, window, gc,
+                  file * cellSize + cellSize/2 + 20,  // Add offset
+                  8 * cellSize + 35,  // Below the board
+                  &label, 1);
+  }
+  
+  // Draw rank labels (1-8)
+  for (int rank = 0; rank < 8; ++rank) {
+      char label = '1' + rank;
+      
+      // Draw at left side
+      XDrawString(display, window, gc,
+                  10,  // Left of the board
+                  (7 - rank) * cellSize + cellSize/2 + 20,  // Add offset
+                  &label, 1);
+      
+      XDrawString(display, window, gc,
+                  8 * cellSize + 30,
+                  (7 - rank) * cellSize + cellSize/2 + 20,
+                  &label, 1);
+  }
+  
+  // Flush all pending operations
+  XFlush(display);
 }
 
 bool GameController::processGraphicsEvents() {
-    if (!display) return false;
-    
-    if (XPending(display)) {
-        XEvent event;
-        XNextEvent(display, &event);
-        
-        switch (event.type) {
-            case Expose:
-                // Redraw the window
-                renderGraphics();
-                break;
-            
-            case ButtonPress:
-                // Handle mouse clicks (for future implementation)
-                break;
-                
-            case KeyPress:
-                // Close on Escape key
-                {
-                    KeySym key;
-                    char text[10];
-                    XLookupString(&event.xkey, text, 10, &key, 0);
-                    if (key == XK_Escape) {
-                        return false;
-                    }
-                }
-                break;
-        }
-    }
-    
-    return true;
+  if (!display) return false;
+  
+  if (XPending(display)) {
+      XEvent event;
+      XNextEvent(display, &event);
+      
+      switch (event.type) {
+          case Expose:
+              // Redraw the window
+              renderGraphics();
+              break;
+          
+          case ButtonPress:
+              // Handle mouse clicks (for future implementation)
+              break;
+              
+          case KeyPress:
+              // Close on Escape key
+              {
+                  KeySym key;
+                  char text[10];
+                  XLookupString(&event.xkey, text, 10, &key, 0);
+                  if (key == XK_Escape) {
+                      return false;
+                  }
+              }
+              break;
+      }
+  }
+  
+  return true;
 }
 
 Pos GameController::parsePos(const std::string& pos) {
@@ -710,7 +706,6 @@ bool GameController::processSetupCommand(const std::string& cmd) {
   iss >> command;
   
   if (command == "+") {
-    // Place a piece: + [piece] [position]
     char pieceType;
     std::string posStr;
     iss >> pieceType >> posStr;
@@ -726,13 +721,10 @@ bool GameController::processSetupCommand(const std::string& cmd) {
       return true;
     }
     
-    // Determine piece color based on case
     Colour colour = isupper(pieceType) ? Colour::White : Colour::Black;
     
-    // Place the piece
     board->placePiece(pos, pieceType, colour);
     
-    // Update graphics if active
     if (graphicsActive) {
       renderGraphics();
     }
@@ -740,7 +732,6 @@ bool GameController::processSetupCommand(const std::string& cmd) {
     board->draw(std::cout);
   } 
   else if (command == "-") {
-    // Remove a piece: - [position]
     std::string posStr;
     iss >> posStr;
     
@@ -755,38 +746,29 @@ bool GameController::processSetupCommand(const std::string& cmd) {
       return true;
     }
     
-    // Remove the piece
     board->removePiece(pos);
     
-    // Update graphics if active
     if (graphicsActive) {
       renderGraphics();
     }
     
     board->draw(std::cout);
-  }
+  } 
   else if (command == "=") {
-    // Set turn: = [color]
-    std::string colorStr;
-    iss >> colorStr;
+    std::string colourStr;
+    iss >> colourStr;
     
-    if (colorStr.empty()) {
-      std::cout << "Invalid command format. Use '= [color]'.\n";
-      return true;
-    }
-    
-    if (colorStr == "white") {
+    if (colourStr == "white") {
       board->setCurrentTurn(Colour::White);
       std::cout << "Set white to play next.\n";
-    } else if (colorStr == "black") {
+    } else if (colourStr == "black") {
       board->setCurrentTurn(Colour::Black);
       std::cout << "Set black to play next.\n";
     } else {
-      std::cout << "Invalid color. Use 'white' or 'black'.\n";
+      std::cout << "Invalid colour. Use 'white' or 'black'.\n";
     }
   }
   else if (command == "graphics") {
-    // Toggle graphics mode
     if (graphicsActive) {
       std::cout << "Closing graphics window...\n";
       closeGraphics();
@@ -804,14 +786,12 @@ bool GameController::processSetupCommand(const std::string& cmd) {
     return true;
   }
   else if (command == "done") {
-    // Exit setup mode
     if (validateBoard()) {
       setupMode = false;
       std::cout << "Exiting setup mode. Board is valid.\n";
       gameInProgress = true;
       gameOver = false;
       
-      // Initialize graphics if not already active
       if (!graphicsActive) {
         graphicsActive = initGraphics();
         
@@ -822,14 +802,12 @@ bool GameController::processSetupCommand(const std::string& cmd) {
         }
       }
       
-      // Update the display
       if (graphicsActive) {
         renderGraphics();
       }
       
       board->draw(std::cout);
       
-      // Check for kings-only stalemate (special case)
       int pieceCount = 0;
       bool hasOnlyKings = true;
       
@@ -852,25 +830,22 @@ bool GameController::processSetupCommand(const std::string& cmd) {
         gameInProgress = false;
         gameOver = true;
         
-        // Close graphics window after a delay
         if (graphicsActive) {
-          sleep(2); // Give user a moment to see the final position
+          sleep(2);
           closeGraphics();
           graphicsActive = false;
         }
         return true;
       }
       
-      // Check for stalemate immediately after setup
       Colour currentPlayerColour = board->getCurrentTurn();
       if (board->isStalemate(currentPlayerColour)) {
         std::cout << "Stalemate! The game is a draw.\n";
         gameInProgress = false;
         gameOver = true;
         
-        // Close graphics window
         if (graphicsActive) {
-          sleep(2); // Give user a moment to see the final position
+          sleep(2);
           closeGraphics();
           graphicsActive = false;
         }
@@ -880,9 +855,8 @@ bool GameController::processSetupCommand(const std::string& cmd) {
           gameInProgress = false;
           gameOver = true;
           
-          // Close graphics window
           if (graphicsActive) {
-            sleep(2); // Give user a moment to see the final position
+            sleep(2);
             closeGraphics();
             graphicsActive = false;
           }
@@ -891,12 +865,11 @@ bool GameController::processSetupCommand(const std::string& cmd) {
         }
       }
       
-      // Show whose turn it is
       std::cout << "\n" << (currentPlayerColour == Colour::White ? "White" : "Black") << " to play." << std::endl;
     } else {
       std::cout << "Invalid board configuration. Cannot exit setup mode.\n";
     }
-  }
+  } 
   else {
     std::cout << "Unknown setup command. Available commands:\n";
     std::cout << "+ [piece] [position] - Add a piece (e.g., '+ K e1' for white king, '+ k e8' for black king)\n";
@@ -910,7 +883,6 @@ bool GameController::processSetupCommand(const std::string& cmd) {
 }
 
 bool GameController::validateBoard() const {
-  // Check if there is exactly one king of each color
   bool whiteKingFound = false;
   bool blackKingFound = false;
   int pieceCount = 0;
@@ -940,7 +912,6 @@ bool GameController::validateBoard() const {
     return false;
   }
   
-  // Check for pawns on the first or last rank
   for (int file = 0; file < 8; ++file) {
     auto piece1 = board->pieceAt({file, 0});
     auto piece2 = board->pieceAt({file, 7});
@@ -952,7 +923,6 @@ bool GameController::validateBoard() const {
     }
   }
   
-  // Check if either king is in check
   if (board->isInCheck(Colour::White)) {
     std::cout << "Invalid board: White king is in check.\n";
     return false;
@@ -963,11 +933,9 @@ bool GameController::validateBoard() const {
     return false;
   }
   
-  // Check if there are only two kings on the board (immediate stalemate)
   if (pieceCount == 2 && whiteKingFound && blackKingFound) {
     std::cout << "Warning: Board has only two kings. This is an immediate stalemate (draw).\n";
     std::cout << "The game will end in a draw after setup is completed.\n";
-    // We still return true as this is a valid board configuration, just with a predetermined outcome
   }
   
   return true;
@@ -983,13 +951,17 @@ void GameController::run() {
   std::cout << "  - game computer human [level] - Let the computer play as white\n";
   std::cout << "  - game computer computer [level] - Watch two computer players\n";
   std::cout << "  - move <from> <to> [promotion] (e.g., 'move e2 e4')\n";
-  std::cout << "  - setup (enter setup mode)\n";  // Added setup command to the help text
+  std::cout << "  - setup (enter setup mode)\n";
   std::cout << "  - resign - Forfeit the game\n";
   std::cout << "  - draw\n";
   std::cout << "  - score - Display current score\n";
   std::cout << "  - quit or exit - Quit the game\n";
   
   bool running = true;
+  
+  // Print the first prompt
+  std::cout << "Enter command: " << std::flush;
+  
   while (running) {
     // If it's a computer's turn, make its move
     if (gameInProgress && !gameOver && isComputerTurn()) {
@@ -1011,13 +983,17 @@ void GameController::run() {
         
         if (poll(fds, 1, 0) > 0) {
           // User input available, break out of computer vs. computer loop
-          std::cout << "\nComputer game paused. Enter a command: ";
           if (!std::getline(std::cin, line)) {
             break; // End of input
           }
           
           if (!processCommand(line)) {
             running = false;
+          }
+          
+          // Print prompt for next command if still running
+          if (running) {
+            std::cout << "Enter command: " << std::flush;
           }
           continue;
         }
@@ -1027,45 +1003,40 @@ void GameController::run() {
       }
     }
     
-    std::cout << "\nEnter command: ";
-    
     // Check for graphics events if active
     if (graphicsActive) {
-      // Set up polling for input while checking for graphics events
-      struct pollfd fds[1];
-      fds[0].fd = STDIN_FILENO;
-      fds[0].events = POLLIN;
+      // Process any pending graphics events
+      if (!processGraphicsEvents()) {
+        // Window was closed
+        graphicsActive = false;
+        std::cout << "Graphics window closed. Running in text-only mode.\n";
+      }
+    }
+    
+    struct pollfd fds[1];
+    fds[0].fd = STDIN_FILENO;
+    fds[0].events = POLLIN;
+    
+    if (poll(fds, 1, 10) > 0) {
+      if (!std::getline(std::cin, line)) {
+        running = false;
+        break;
+      }
       
-      while (true) {
-        // Poll with a short timeout to check for graphics events without blocking
-        if (poll(fds, 1, 10) > 0) {
-          // Input available, break out of polling loop
-          break;
-        }
-        
-        // Process graphics events
-        if (!processGraphicsEvents()) {
-          // Window was closed
-          graphicsActive = false;
-          std::cout << "Graphics window closed. Running in text-only mode.\n";
-          break;
-        }
+      bool shouldContinue = true;
+      if (setupMode) {
+        shouldContinue = processSetupCommand(line);
+      } else {
+        shouldContinue = processCommand(line);
       }
-    }
-    
-    // Read the command from stdin
-    if (!std::getline(std::cin, line)) {
-      break; // End of input
-    }
-    
-    // Handle setup mode or regular commands
-    if (setupMode) {
-      if (!processSetupCommand(line)) {
+      
+      if (!shouldContinue) {
         running = false;
       }
-    } else {
-      if (!processCommand(line)) {
-        running = false;
+      
+      // Print prompt for next command if still running
+      if (running) {
+        std::cout << "Enter command: " << std::flush;
       }
     }
   }
@@ -1160,7 +1131,6 @@ void GameController::makeComputerMove() {
   }
   
   if (moveSuccess) {
-    // Display the move
     char fromFile = 'a' + chosenMove.from.file;
     char fromRank = '1' + chosenMove.from.rank;
     char toFile = 'a' + chosenMove.to.file;
@@ -1172,15 +1142,12 @@ void GameController::makeComputerMove() {
     }
     std::cout << std::endl;
     
-    // Update graphics if active
     if (graphicsActive) {
       renderGraphics();
     }
     
-    // Show text board
     board->draw(std::cout);
     
-    // Show whose turn it is
     Colour nextPlayer = board->getCurrentTurn();
     std::cout << "\n" << (nextPlayer == Colour::White ? "White" : "Black") << " to play." << std::endl;
     
@@ -1264,7 +1231,6 @@ std::vector<Move> GameController::getAllLegalMoves(Colour colour) const {
 // Get a random move from the list of legal moves
 Move GameController::getRandomMove(const std::vector<Move>& moves) const {
   if (moves.empty()) {
-    // This should never happen, but just in case
     return Move({0, 0}, {0, 0});
   }
   
@@ -1293,17 +1259,14 @@ Move GameController::getBestMoveLevel2(const std::vector<Move>& moves) const {
     }
   }
   
-  // Prefer capturing moves
   if (!capturingMoves.empty()) {
     return getRandomMove(capturingMoves);
   }
   
-  // Then prefer checking moves
   if (!checkingMoves.empty()) {
     return getRandomMove(checkingMoves);
   }
   
-  // Otherwise, make a random move
   return getRandomMove(normalMoves);
 }
 
@@ -1344,7 +1307,6 @@ Move GameController::getBestMoveLevel3(const std::vector<Move>& moves) const {
     }
   }
   
-  // Choose a move based on priority
   if (!safeCaptureCheckMoves.empty()) return getRandomMove(safeCaptureCheckMoves);
   if (!safeCaptureMoves.empty()) return getRandomMove(safeCaptureMoves);
   if (!safeCheckMoves.empty()) return getRandomMove(safeCheckMoves);
@@ -1352,28 +1314,24 @@ Move GameController::getBestMoveLevel3(const std::vector<Move>& moves) const {
   if (!capturingMoves.empty()) return getRandomMove(capturingMoves);
   if (!checkingMoves.empty()) return getRandomMove(checkingMoves);
   
-  // Fall back to a random move
   return getRandomMove(normalMoves);
 }
 
-// Level 4: More sophisticated strategy with piece values and position evaluation
+// Level 4
 Move GameController::getBestMoveLevel4(const std::vector<Move>& moves) const {
   if (moves.empty()) {
     return Move({0, 0}, {0, 0});
   }
   
-  // Track the best move and its score
   Move bestMove = moves[0];
-  int bestScore = -999999;  // Very low initial score
+  int bestScore = -999999; 
   
-  // Current player color
   Colour currentPlayer = board->getCurrentTurn();
   
   for (const auto& move : moves) {
     // Create a temporary board to simulate the move
     Board tempBoard = *board;
     
-    // Make the move on the temporary board
     bool moveSuccess = false;
     if (move.promotion != '\0') {
       moveSuccess = tempBoard.move(move.from, move.to, move.promotion);
@@ -1383,10 +1341,8 @@ Move GameController::getBestMoveLevel4(const std::vector<Move>& moves) const {
     
     if (!moveSuccess) continue;
     
-    // Evaluate the position after the move
     int score = evaluatePosition(tempBoard, currentPlayer);
     
-    // Check if this move is better than our current best
     if (score > bestScore) {
       bestScore = score;
       bestMove = move;
@@ -1404,7 +1360,7 @@ int GameController::getPieceValue(char pieceSymbol) const {
     case 'B': return 330;   // Bishop
     case 'R': return 500;   // Rook
     case 'Q': return 900;   // Queen
-    case 'K': return 20000; // King - very high value
+    case 'K': return 20000; // King
     default: return 0;
   }
 }
@@ -1413,8 +1369,6 @@ int GameController::getPieceValue(char pieceSymbol) const {
 int GameController::evaluatePosition(const Board& board, Colour perspective) const {
   int score = 0;
   
-  // Simple piece-square tables for positional evaluation
-  // These are very basic - a real chess engine would have more sophisticated tables
   const int pawnPositionBonus[8][8] = {
     {0,  0,  0,  0,  0,  0,  0,  0},
     {50, 50, 50, 50, 50, 50, 50, 50},
@@ -1448,7 +1402,6 @@ int GameController::evaluatePosition(const Board& board, Colour perspective) con
     {-20,-10,-10,-10,-10,-10,-10,-20}
   };
   
-  // Evaluate material and position for each piece on the board
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       Pos pos{file, rank};
@@ -1458,7 +1411,6 @@ int GameController::evaluatePosition(const Board& board, Colour perspective) con
         int pieceValue = getPieceValue(piece->symbol());
         int positionBonus = 0;
         
-        // Apply position bonus based on piece type
         char pieceType = toupper(piece->symbol());
         if (pieceType == 'P') {
           positionBonus = pawnPositionBonus[rank][file];
@@ -1468,12 +1420,10 @@ int GameController::evaluatePosition(const Board& board, Colour perspective) con
           positionBonus = bishopPositionBonus[rank][file];
         }
         
-        // Flip the board for black's perspective
         if (piece->colour() == Colour::Black) {
           positionBonus = pawnPositionBonus[7 - rank][file];
         }
         
-        // Add or subtract value based on piece color
         if (piece->colour() == perspective) {
           score += pieceValue + positionBonus;
         } else {
@@ -1483,23 +1433,19 @@ int GameController::evaluatePosition(const Board& board, Colour perspective) con
     }
   }
   
-  // Bonus for checking the opponent
   Colour opponent = (perspective == Colour::White) ? Colour::Black : Colour::White;
   if (board.isInCheck(opponent)) {
     score += 50;
   }
   
-  // Penalty for being in check
   if (board.isInCheck(perspective)) {
     score -= 50;
   }
   
-  // Big bonus for checkmate
   if (board.isCheckmate(opponent)) {
     score += 10000;
   }
   
-  // Big penalty for being checkmated
   if (board.isCheckmate(perspective)) {
     score -= 10000;
   }
@@ -1511,7 +1457,6 @@ int GameController::evaluatePosition(const Board& board, Colour perspective) con
 bool GameController::isCapturingMove(const Move& move) const {
   if (!board) return false;
   
-  // Check if there's an opponent's piece at the destination
   auto destPiece = board->pieceAt(move.to);
   return destPiece != nullptr && destPiece->colour() != board->getCurrentTurn();
 }
@@ -1520,10 +1465,8 @@ bool GameController::isCapturingMove(const Move& move) const {
 bool GameController::isCheckingMove(const Move& move) const {
   if (!board) return false;
   
-  // Create a temporary copy of the board to simulate the move
   Board tempBoard = *board;
   
-  // Make the move on the temporary board
   bool moveSuccess = false;
   if (move.promotion != '\0') {
     moveSuccess = tempBoard.move(move.from, move.to, move.promotion);
@@ -1555,7 +1498,6 @@ bool GameController::movePutsInDanger(const Move& move) const {
   
   if (!moveSuccess) return false;
   
-  // Check if the destination square is attacked by any opponent piece
   Colour opponentColour = (board->getCurrentTurn() == Colour::White) ? Colour::Black : Colour::White;
   return tempBoard.isSquareAttacked(move.to, opponentColour);
 } 

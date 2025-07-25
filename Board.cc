@@ -12,18 +12,14 @@
 #include <memory>
 #include <ostream>
 #include <algorithm>
-#include <iostream> // Added for debug output
+#include <iostream>
 
 Board::Board() : grid(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), currentTurn{Colour::White} {
-  // Initialize the board with pieces in their starting positions
-  
-  // Set up pawns
   for (int file = 0; file < 8; ++file) {
     grid[1][file] = std::make_shared<Pawn>(Colour::White);
     grid[6][file] = std::make_shared<Pawn>(Colour::Black);
   }
   
-  // Set up other pieces for White
   grid[0][0] = std::make_shared<Rook>(Colour::White);
   grid[0][1] = std::make_shared<Knight>(Colour::White);
   grid[0][2] = std::make_shared<Bishop>(Colour::White);
@@ -33,7 +29,6 @@ Board::Board() : grid(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), curre
   grid[0][6] = std::make_shared<Knight>(Colour::White);
   grid[0][7] = std::make_shared<Rook>(Colour::White);
   
-  // Set up other pieces for Black
   grid[7][0] = std::make_shared<Rook>(Colour::Black);
   grid[7][1] = std::make_shared<Knight>(Colour::Black);
   grid[7][2] = std::make_shared<Bishop>(Colour::Black);
@@ -45,7 +40,6 @@ Board::Board() : grid(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), curre
 }
 
 Board::~Board() {
-  // No cleanup needed
 }
 
 bool Board::isValidPos(Pos p) const {
@@ -58,31 +52,22 @@ std::shared_ptr<Piece> Board::pieceAt(Pos p) const {
 }
 
 bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
-  // Create a temporary copy of the grid
   auto tempGrid = grid;
   
-  // Get the piece at the source position
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Make the move on the temporary grid
   tempGrid[dst.rank][dst.file] = piece;
   tempGrid[src.rank][src.file] = nullptr;
-  
-  // For en passant, also remove the captured pawn
+
   if (piece->symbol() == 'P' || piece->symbol() == 'p') {
     if (abs(dst.file - src.file) == 1 && abs(dst.rank - src.rank) == 1) {
-      // Check if destination is empty (en passant capture)
       if (!pieceAt(dst)) {
-        // This is an en passant capture
         tempGrid[src.rank][dst.file] = nullptr;
       }
     }
   }
   
-  // Check if the king is in check after the move
-  
-  // Find the king's position
   Pos kingPos{-1, -1};
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
@@ -97,29 +82,22 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
   }
   
   if (kingPos.file == -1) {
-    // King not found, should never happen
     return false;
   }
   
-  // Check if any opponent piece can capture the king
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       auto p = tempGrid[rank][file];
       if (p && p->colour() != playerColour) {
-        // We can't use legalMoves here because it would cause infinite recursion
-        // Instead, check if the piece could directly attack the king
         bool canAttack = false;
         
-        // Check based on piece type
         if (p->symbol() == 'P' || p->symbol() == 'p') {
-          // Pawn attacks diagonally
           int direction = (p->colour() == Colour::White) ? 1 : -1;
           if ((rank + direction == kingPos.rank) && 
               (abs(file - kingPos.file) == 1)) {
             canAttack = true;
           }
         } else if (p->symbol() == 'N' || p->symbol() == 'n') {
-          // Knight moves in L-shape
           int dx = abs(file - kingPos.file);
           int dy = abs(rank - kingPos.rank);
           if ((dx == 1 && dy == 2) || (dx == 2 && dy == 1)) {
@@ -127,9 +105,7 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
           }
         } else if (p->symbol() == 'B' || p->symbol() == 'b' || 
                    p->symbol() == 'Q' || p->symbol() == 'q') {
-          // Bishop or Queen can move diagonally
           if (abs(file - kingPos.file) == abs(rank - kingPos.rank)) {
-            // Check if path is clear
             int dx = (kingPos.file > file) ? 1 : -1;
             int dy = (kingPos.rank > rank) ? 1 : -1;
             bool pathClear = true;
@@ -150,12 +126,9 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
         
         if (p->symbol() == 'R' || p->symbol() == 'r' || 
             p->symbol() == 'Q' || p->symbol() == 'q') {
-          // Rook or Queen can move horizontally or vertically
           if (file == kingPos.file || rank == kingPos.rank) {
-            // Check if path is clear
             bool pathClear = true;
             if (file == kingPos.file) {
-              // Vertical movement
               int step = (kingPos.rank > rank) ? 1 : -1;
               for (int y = rank + step; y != kingPos.rank; y += step) {
                 if (tempGrid[y][file]) {
@@ -164,7 +137,6 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
                 }
               }
             } else {
-              // Horizontal movement
               int step = (kingPos.file > file) ? 1 : -1;
               for (int x = file + step; x != kingPos.file; x += step) {
                 if (tempGrid[rank][x]) {
@@ -178,87 +150,72 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
         }
         
         if (p->symbol() == 'K' || p->symbol() == 'k') {
-          // King attacks one square in any direction
           if (abs(file - kingPos.file) <= 1 && abs(rank - kingPos.rank) <= 1) {
             canAttack = true;
           }
         }
         
         if (canAttack) {
-          return false;  // King can be captured, move is not valid
+          return false;
         }
       }
     }
   }
   
-  return true;  // King cannot be captured, move is valid
+  return true;
 }
 
 bool Board::isCheckmate(Colour c) const {
-  // First check if the player is in check
   if (!isInCheck(c)) {
     return false;
   }
   
-  // Try all possible moves for all pieces of the player
   for (int srcRank = 0; srcRank < 8; ++srcRank) {
     for (int srcFile = 0; srcFile < 8; ++srcFile) {
       Pos src{srcFile, srcRank};
       auto piece = pieceAt(src);
       
-      // Skip if no piece or not the player's piece
       if (!piece || piece->colour() != c) {
         continue;
       }
       
-      // Get all legal moves for this piece
       auto legalMoves = piece->legalMoves(*this, src);
       
-      // Try each move to see if it gets out of check
       for (const auto& dst : legalMoves) {
         if (simulateMove(src, dst, c)) {
-          // Found a move that gets out of check
           return false;
         }
       }
     }
   }
   
-  // No move can get the player out of check
   return true;
 }
 
 bool Board::isStalemate(Colour c) const {
-  // First check if the player is in check - if so, it's not stalemate
   if (isInCheck(c)) {
     return false;
   }
   
-  // Try all possible moves for all pieces of the player
   for (int srcRank = 0; srcRank < 8; ++srcRank) {
     for (int srcFile = 0; srcFile < 8; ++srcFile) {
       Pos src{srcFile, srcRank};
       auto piece = pieceAt(src);
       
-      // Skip if no piece or not the player's piece
       if (!piece || piece->colour() != c) {
         continue;
       }
       
-      // Get all legal moves for this piece
       auto legalMoves = piece->legalMoves(*this, src);
       
-      // Try each move to see if it's legal
       for (const auto& dst : legalMoves) {
         if (simulateMove(src, dst, c)) {
-          // Found a legal move, so not stalemate
           return false;
         }
       }
     }
   }
   
-  // No legal moves found and not in check = stalemate
   return true;
 }
 
@@ -268,28 +225,22 @@ std::shared_ptr<Piece> Board::createPromotedPiece(char pieceType, Colour c) {
     case 'R': return std::make_shared<Rook>(c);
     case 'B': return std::make_shared<Bishop>(c);
     case 'N': return std::make_shared<Knight>(c);
-    default: return std::make_shared<Queen>(c); // Default to Queen if invalid
+    default: return std::make_shared<Queen>(c);
   }
 }
 
 bool Board::move(Pos src, Pos dst, char promotionPiece) {
-  // Check if source position is valid and has a piece
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Check if it's the correct player's turn
   if (piece->colour() != currentTurn) return false;
   
-  // Check for special moves
   bool isCastling = canCastle(src, dst);
   bool isEnPassant = isEnPassantCapture(src, dst);
   
-  // For regular moves, check if the destination is a legal move
   if (!isCastling && !isEnPassant) {
-    // Get legal moves for the piece
     auto legalMoves = piece->legalMoves(*this, src);
     
-    // Check if the destination is a legal move
     if (std::find_if(legalMoves.begin(), legalMoves.end(),
                     [dst](const Pos& p) { return p.file == dst.file && p.rank == dst.rank; }) 
         == legalMoves.end()) {
@@ -297,18 +248,15 @@ bool Board::move(Pos src, Pos dst, char promotionPiece) {
     }
   }
   
-  // Check if the move would leave the player in check
   if (!simulateMove(src, dst, currentTurn)) {
     return false;
   }
   
-  // Perform the move based on its type
   if (isCastling) {
     performCastling(src, dst);
   } else if (isEnPassant) {
     performEnPassant(src, dst);
   } else {
-    // Check if this is a valid pawn promotion
     bool isPawnPromotion = false;
     if (dynamic_cast<Pawn*>(piece.get())) {
       if ((piece->colour() == Colour::White && dst.rank == 7) ||
@@ -317,7 +265,6 @@ bool Board::move(Pos src, Pos dst, char promotionPiece) {
       }
     }
     
-    // Make the move
     if (isPawnPromotion) {
       grid[dst.rank][dst.file] = createPromotedPiece(promotionPiece, piece->colour());
     } else {
@@ -326,22 +273,18 @@ bool Board::move(Pos src, Pos dst, char promotionPiece) {
     grid[src.rank][src.file] = nullptr;
   }
   
-  // Update tracking for special moves
   updateSpecialMoveTracking(src, dst, piece);
   
-  // Switch turns
   currentTurn = (currentTurn == Colour::White) ? Colour::Black : Colour::White;
   
   return true;
 }
 
 bool Board::move(Pos src, Pos dst) {
-  // For backward compatibility, default to Queen promotion
   return move(src, dst, 'Q');
 }
 
 bool Board::isInCheck(Colour c) const {
-  // Find the king's position
   Pos kingPos{-1, -1};
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
@@ -355,7 +298,6 @@ bool Board::isInCheck(Colour c) const {
     if (kingPos.file != -1) break;
   }
   
-  // Check if the king's position is under attack
   return isSquareAttacked(kingPos, c);
 }
 
@@ -380,15 +322,12 @@ bool Board::isCastlingMove(Pos src, Pos dst) const {
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Check if this is a king
   bool isKing = (piece->symbol() == 'K' || piece->symbol() == 'k');
   if (!isKing) return false;
   
-  // Check if the king is moving two squares horizontally
   if (src.rank != dst.rank) return false;
   if (abs(dst.file - src.file) != 2) return false;
   
-  // Check if the king is in its initial position
   bool isWhiteKing = (piece->colour() == Colour::White);
   if (isWhiteKing) {
     if (src.file != 4 || src.rank != 0 || whiteKingMoved) return false;
@@ -396,7 +335,6 @@ bool Board::isCastlingMove(Pos src, Pos dst) const {
     if (src.file != 4 || src.rank != 7 || blackKingMoved) return false;
   }
   
-  // Check if the rook is in its initial position
   bool isKingSideCastling = (dst.file > src.file);
   int rookFile = isKingSideCastling ? 7 : 0;
   int rookRank = isWhiteKing ? 0 : 7;
@@ -405,7 +343,6 @@ bool Board::isCastlingMove(Pos src, Pos dst) const {
   if (!rook || (rook->symbol() != 'R' && rook->symbol() != 'r')) return false;
   if (rook->colour() != piece->colour()) return false;
   
-  // Check if the rook has moved
   if (isWhiteKing) {
     if (isKingSideCastling && whiteRookHMoved) return false;
     if (!isKingSideCastling && whiteRookAMoved) return false;
@@ -414,20 +351,16 @@ bool Board::isCastlingMove(Pos src, Pos dst) const {
     if (!isKingSideCastling && blackRookAMoved) return false;
   }
   
-  // Check if the path between king and rook is clear
   int step = isKingSideCastling ? 1 : -1;
   for (int f = src.file + step; f != rookFile; f += step) {
     if (pieceAt({f, src.rank})) return false;
   }
   
-  // Check if the king is in check
   if (isInCheck(piece->colour())) return false;
   
-  // Check if the king passes through or ends up in check
   for (int f = src.file + step; f != src.file + 3*step; f += step) {
     if (f < 0 || f > 7) break;
     
-    // Simulate the king at this position and check if it would be in check
     Board tempBoard = *this;
     tempBoard.grid[src.rank][src.file] = nullptr;
     tempBoard.grid[src.rank][f] = piece;
@@ -441,20 +374,16 @@ bool Board::isEnPassantCapture(Pos src, Pos dst) const {
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Check if this is a pawn
   bool isPawn = (piece->symbol() == 'P' || piece->symbol() == 'p');
   if (!isPawn) return false;
   
-  // Check if this is a diagonal move (capture)
   if (abs(dst.file - src.file) != 1) return false;
   
   int direction = (piece->colour() == Colour::White) ? 1 : -1;
   if (dst.rank - src.rank != direction) return false;
   
-  // Check if the destination square is empty
   if (pieceAt(dst)) return false;
   
-  // Check if there's a pawn that just made a double move
   if (lastPawnDoubleMove.file == dst.file && lastPawnDoubleMove.rank == src.rank) {
     return true;
   }
@@ -466,20 +395,16 @@ bool Board::canEnPassantCapture(Pos src, Pos dst) const {
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Check if this is a pawn
   bool isPawn = (piece->symbol() == 'P' || piece->symbol() == 'p');
   if (!isPawn) return false;
   
-  // Check if this is a diagonal move (capture)
   if (abs(dst.file - src.file) != 1) return false;
   
   int direction = (piece->colour() == Colour::White) ? 1 : -1;
   if (dst.rank - src.rank != direction) return false;
   
-  // Check if the destination square is empty
   if (pieceAt(dst)) return false;
   
-  // Check if there's a pawn that just made a double move
   if (lastPawnDoubleMove.file == dst.file && lastPawnDoubleMove.rank == src.rank) {
     return true;
   }
@@ -491,23 +416,18 @@ void Board::performCastling(Pos src, Pos dst) {
   auto king = pieceAt(src);
   bool isKingSideCastling = (dst.file > src.file);
   
-  // Determine rook position
   int rookFile = isKingSideCastling ? 7 : 0;
   int rookRank = src.rank;
   auto rook = pieceAt({rookFile, rookRank});
   
-  // Determine new rook position
   int newRookFile = isKingSideCastling ? 5 : 3;
   
-  // Move the king
   grid[dst.rank][dst.file] = king;
   grid[src.rank][src.file] = nullptr;
   
-  // Move the rook
   grid[rookRank][newRookFile] = rook;
   grid[rookRank][rookFile] = nullptr;
   
-  // Update tracking for castling
   if (king->colour() == Colour::White) {
     whiteKingMoved = true;
     if (isKingSideCastling) {
@@ -527,17 +447,12 @@ void Board::performCastling(Pos src, Pos dst) {
 
 void Board::performEnPassant(Pos src, Pos dst) {
   auto pawn = pieceAt(src);
-  
-  // Move the pawn
   grid[dst.rank][dst.file] = pawn;
   grid[src.rank][src.file] = nullptr;
-  
-  // Remove the captured pawn (which is on the same file as dst but on the same rank as src)
   grid[src.rank][dst.file] = nullptr;
 }
 
 void Board::updateSpecialMoveTracking(Pos src, Pos dst, std::shared_ptr<Piece> piece) {
-  // Update castling tracking
   if (piece->symbol() == 'K') {
     whiteKingMoved = true;
   } else if (piece->symbol() == 'k') {
@@ -554,38 +469,31 @@ void Board::updateSpecialMoveTracking(Pos src, Pos dst, std::shared_ptr<Piece> p
     }
   }
   
-  // Update en passant tracking
   if (piece->symbol() == 'P' || piece->symbol() == 'p') {
-    // Check if this is a two-square pawn move
     if (abs(dst.rank - src.rank) == 2) {
       lastPawnDoubleMove = dst;
     } else {
-      lastPawnDoubleMove = {-1, -1};  // Reset
+      lastPawnDoubleMove = {-1, -1};
     }
   } else {
-    lastPawnDoubleMove = {-1, -1};  // Reset for non-pawn moves
+    lastPawnDoubleMove = {-1, -1};
   }
 } 
 
 bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
-  // Check if any opponent piece can attack this square
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       auto piece = grid[rank][file];
       if (piece && piece->colour() != defendingColour) {
-        // Check if this piece can attack the square
         bool canAttack = false;
         
-        // Check based on piece type
         if (piece->symbol() == 'P' || piece->symbol() == 'p') {
-          // Pawn attacks diagonally
           int direction = (piece->colour() == Colour::White) ? 1 : -1;
           if ((rank + direction == square.rank) && 
               (abs(file - square.file) == 1)) {
             canAttack = true;
           }
         } else if (piece->symbol() == 'N' || piece->symbol() == 'n') {
-          // Knight moves in L-shape
           int dx = abs(file - square.file);
           int dy = abs(rank - square.rank);
           if ((dx == 1 && dy == 2) || (dx == 2 && dy == 1)) {
@@ -593,9 +501,7 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
           }
         } else if (piece->symbol() == 'B' || piece->symbol() == 'b' || 
                    piece->symbol() == 'Q' || piece->symbol() == 'q') {
-          // Bishop or Queen can move diagonally
           if (abs(file - square.file) == abs(rank - square.rank)) {
-            // Check if path is clear
             int dx = (square.file > file) ? 1 : -1;
             int dy = (square.rank > rank) ? 1 : -1;
             bool pathClear = true;
@@ -616,12 +522,9 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
         
         if (piece->symbol() == 'R' || piece->symbol() == 'r' || 
             piece->symbol() == 'Q' || piece->symbol() == 'q') {
-          // Rook or Queen can move horizontally or vertically
           if (file == square.file || rank == square.rank) {
-            // Check if path is clear
             bool pathClear = true;
             if (file == square.file) {
-              // Vertical movement
               int step = (square.rank > rank) ? 1 : -1;
               for (int y = rank + step; y != square.rank; y += step) {
                 if (pieceAt({file, y})) {
@@ -630,7 +533,6 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
                 }
               }
             } else {
-              // Horizontal movement
               int step = (square.file > file) ? 1 : -1;
               for (int x = file + step; x != square.file; x += step) {
                 if (pieceAt({x, rank})) {
@@ -644,20 +546,19 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
         }
         
         if (piece->symbol() == 'K' || piece->symbol() == 'k') {
-          // King attacks one square in any direction
           if (abs(file - square.file) <= 1 && abs(rank - square.rank) <= 1) {
             canAttack = true;
           }
         }
         
         if (canAttack) {
-          return true;  // Square is attacked
+          return true;
         }
       }
     }
   }
   
-  return false;  // Square is not attacked
+  return false;
 }
 
 bool Board::hasKingMoved(Colour c) const {
@@ -673,22 +574,18 @@ bool Board::hasRookMoved(Colour c, bool kingSide) const {
 }
 
 bool Board::isPathClear(Pos from, Pos to) const {
-  // Determine the direction of movement
   int fileDir = (to.file > from.file) ? 1 : (to.file < from.file) ? -1 : 0;
   int rankDir = (to.rank > from.rank) ? 1 : (to.rank < from.rank) ? -1 : 0;
   
-  // Start from the square after 'from' and check each square until 'to' (exclusive)
   Pos current = from;
   while (true) {
     current.file += fileDir;
     current.rank += rankDir;
     
-    // Stop when we reach the destination
     if (current.file == to.file && current.rank == to.rank) {
       break;
     }
     
-    // If there's a piece in the path, the path is not clear
     if (isValidPos(current) && pieceAt(current)) {
       return false;
     }
@@ -701,15 +598,12 @@ bool Board::canCastle(Pos src, Pos dst) const {
   auto piece = pieceAt(src);
   if (!piece) return false;
   
-  // Check if this is a king
   bool isKing = (piece->symbol() == 'K' || piece->symbol() == 'k');
   if (!isKing) return false;
   
-  // Check if the king is moving two squares horizontally
   if (src.rank != dst.rank) return false;
   if (abs(dst.file - src.file) != 2) return false;
   
-  // Check if the king is in its initial position
   bool isWhiteKing = (piece->colour() == Colour::White);
   if (isWhiteKing) {
     if (src.file != 4 || src.rank != 0 || whiteKingMoved) return false;
@@ -717,7 +611,6 @@ bool Board::canCastle(Pos src, Pos dst) const {
     if (src.file != 4 || src.rank != 7 || blackKingMoved) return false;
   }
   
-  // Check if the rook is in its initial position
   bool isKingSideCastling = (dst.file > src.file);
   int rookFile = isKingSideCastling ? 7 : 0;
   int rookRank = isWhiteKing ? 0 : 7;
@@ -726,7 +619,6 @@ bool Board::canCastle(Pos src, Pos dst) const {
   if (!rook || (rook->symbol() != 'R' && rook->symbol() != 'r')) return false;
   if (rook->colour() != piece->colour()) return false;
   
-  // Check if the rook has moved
   if (isWhiteKing) {
     if (isKingSideCastling && whiteRookHMoved) return false;
     if (!isKingSideCastling && whiteRookAMoved) return false;
@@ -735,27 +627,23 @@ bool Board::canCastle(Pos src, Pos dst) const {
     if (!isKingSideCastling && blackRookAMoved) return false;
   }
   
-  // Check if the path between king and rook is clear
   int step = isKingSideCastling ? 1 : -1;
   for (int f = src.file + step; f != rookFile; f += step) {
     if (pieceAt({f, src.rank})) return false;
   }
   
-  // Check if the king is in check
   if (isInCheck(piece->colour())) {
     std::cout << "Cannot castle while in check." << std::endl;
     return false;
   }
   
-  // Check if the king passes through or ends up in check
   for (int f = src.file + step; f != src.file + 3*step; f += step) {
     if (f < 0 || f > 7) break;
     
-    // Check if king would be in check at this position
-    if (isSquareAttacked({f, src.rank}, piece->colour())) {
-      std::cout << "Cannot castle through or into check." << std::endl;
-      return false;
-    }
+    Board tempBoard = *this;
+    tempBoard.grid[src.rank][src.file] = nullptr;
+    tempBoard.grid[src.rank][f] = piece;
+    if (tempBoard.isInCheck(piece->colour())) return false;
   }
   
   return true;
@@ -765,16 +653,13 @@ Colour Board::getCurrentTurn() const {
   return currentTurn;
 }
 
-// Clear the board for setup mode
 void Board::clearBoard() {
-  // Clear the grid
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       grid[rank][file] = nullptr;
     }
   }
   
-  // Reset tracking variables
   currentTurn = Colour::White;
   whiteKingMoved = false;
   blackKingMoved = false;
@@ -785,13 +670,11 @@ void Board::clearBoard() {
   lastPawnDoubleMove = {-1, -1};
 }
 
-// Place a piece during setup
 void Board::placePiece(Pos pos, char pieceType, Colour colour) {
   if (!isValidPos(pos)) return;
   
   std::shared_ptr<Piece> piece = nullptr;
   
-  // Create the appropriate piece based on the type
   switch (toupper(pieceType)) {
     case 'P': piece = std::make_shared<Pawn>(colour); break;
     case 'R': piece = std::make_shared<Rook>(colour); break;
@@ -799,22 +682,18 @@ void Board::placePiece(Pos pos, char pieceType, Colour colour) {
     case 'B': piece = std::make_shared<Bishop>(colour); break;
     case 'Q': piece = std::make_shared<Queen>(colour); break;
     case 'K': piece = std::make_shared<King>(colour); break;
-    default: return; // Invalid piece type
+    default: return;
   }
   
-  // Place the piece on the board
   grid[pos.rank][pos.file] = piece;
 }
 
-// Remove a piece during setup
 void Board::removePiece(Pos pos) {
   if (!isValidPos(pos)) return;
   
-  // Remove the piece
   grid[pos.rank][pos.file] = nullptr;
 }
 
-// Set the current turn
 void Board::setCurrentTurn(Colour c) {
   currentTurn = c;
 } 

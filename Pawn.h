@@ -17,4 +17,4 @@ private:
   bool hasMoved = false;
 };
 
-#endif // PAWN_H 
+#endif 

@@ -14,4 +14,4 @@ public:
   std::vector<Pos> legalMoves(Board const& b, Pos from) const override;
 };
 
-#endif // KNIGHT_H 
+#endif 

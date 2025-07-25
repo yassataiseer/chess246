@@ -16,6 +16,7 @@ A command-line chess game implemented in C++20 for CS246 Spring 2025.
   - Valid promotion pieces: Q (Queen), R (Rook), B (Bishop), N (Knight)
 - `resign` - Resign the current game
 - `score` - Displays the current score
+- `draw` - redraws the board
 - Ctrl-D to quit
 
 ## Building

@@ -14,7 +14,6 @@ char Bishop::symbol() const {
 std::vector<Pos> Bishop::legalMoves(Board const& b, Pos from) const {
   std::vector<Pos> moves;
   
-  // Diagonal directions: top-right, bottom-right, bottom-left, top-left
   const std::vector<std::pair<int, int>> directions = {
     {1, 1}, {1, -1}, {-1, -1}, {-1, 1}
   };
@@ -31,7 +30,7 @@ std::vector<Pos> Bishop::legalMoves(Board const& b, Pos from) const {
         if (piece->colour() != colour()) {
           moves.push_back(dest);
         }
-        break; // Can't move past a piece
+        break;
       }
     }
   }

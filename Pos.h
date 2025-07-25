@@ -3,4 +3,5 @@
 
 struct Pos { int file, rank; };
 
-#endif // POS_H 
+#endif 
+
