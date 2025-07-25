@@ -66,7 +66,15 @@ int main() {
     
     if (command == "quit" || command == "exit") {
       running = false;
-    } else if (command == "game human human") {
+    } 
+    else if (gameActive && !gameOver && command.substr(0, 4) == "game") {
+        if (gameActive && !gameOver) {
+            std::cout << "A game is already in progress. Please resign or finish the current game before starting a new one.\n";
+            continue;
+          }
+    }
+    
+    else if (command == "game human human") {
       // Start a new game
       board = std::make_unique<Board>();
       gameActive = true;
@@ -133,6 +141,13 @@ int main() {
       if (src.file == -1 || dst.file == -1) {
         std::cout << "Invalid position format. Use algebraic notation (e.g., e2).\n";
         continue;
+      }
+      
+      // Check for castling attempt
+      if (board->pieceAt(src) && (board->pieceAt(src)->symbol() == 'K' || board->pieceAt(src)->symbol() == 'k') && abs(dst.file - src.file) == 2) {
+        if (board->isInCheck(board->pieceAt(src)->colour())) {
+          std::cout << "Warning: You cannot castle while in check!\n";
+        }
       }
       
       bool moveSuccess = board->move(src, dst, promotionPiece);

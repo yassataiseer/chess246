@@ -71,9 +71,12 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
   
   // For en passant, also remove the captured pawn
   if (piece->symbol() == 'P' || piece->symbol() == 'p') {
-    if (abs(dst.file - src.file) == 1 && abs(dst.rank - src.rank) == 1 && !pieceAt(dst)) {
-      // This is an en passant capture
-      tempGrid[src.rank][dst.file] = nullptr;
+    if (abs(dst.file - src.file) == 1 && abs(dst.rank - src.rank) == 1) {
+      // Check if destination is empty (en passant capture)
+      if (!pieceAt(dst)) {
+        // This is an en passant capture
+        tempGrid[src.rank][dst.file] = nullptr;
+      }
     }
   }
   
@@ -91,6 +94,11 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
       }
     }
     if (kingPos.file != -1) break;
+  }
+  
+  if (kingPos.file == -1) {
+    // King not found, should never happen
+    return false;
   }
   
   // Check if any opponent piece can capture the king
@@ -125,13 +133,16 @@ bool Board::simulateMove(Pos src, Pos dst, Colour playerColour) const {
             int dx = (kingPos.file > file) ? 1 : -1;
             int dy = (kingPos.rank > rank) ? 1 : -1;
             bool pathClear = true;
-            for (int x = file + dx, y = rank + dy; 
-                 x != kingPos.file && y != kingPos.rank; 
-                 x += dx, y += dy) {
+            
+            int x = file + dx;
+            int y = rank + dy;
+            while (x != kingPos.file && y != kingPos.rank) {
               if (tempGrid[y][x]) {
                 pathClear = false;
                 break;
               }
+              x += dx;
+              y += dy;
             }
             if (pathClear) canAttack = true;
           }
@@ -588,13 +599,16 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
             int dx = (square.file > file) ? 1 : -1;
             int dy = (square.rank > rank) ? 1 : -1;
             bool pathClear = true;
-            for (int x = file + dx, y = rank + dy; 
-                 x != square.file && y != square.rank; 
-                 x += dx, y += dy) {
+            
+            int x = file + dx;
+            int y = rank + dy;
+            while (x != square.file && y != square.rank) {
               if (pieceAt({x, y})) {
                 pathClear = false;
                 break;
               }
+              x += dx;
+              y += dy;
             }
             if (pathClear) canAttack = true;
           }
@@ -637,13 +651,13 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
         }
         
         if (canAttack) {
-          return true;
+          return true;  // Square is attacked
         }
       }
     }
   }
   
-  return false;
+  return false;  // Square is not attacked
 }
 
 bool Board::hasKingMoved(Colour c) const {
@@ -722,17 +736,26 @@ bool Board::canCastle(Pos src, Pos dst) const {
   }
   
   // Check if the path between king and rook is clear
-  if (!isPathClear(src, {rookFile, rookRank})) return false;
+  int step = isKingSideCastling ? 1 : -1;
+  for (int f = src.file + step; f != rookFile; f += step) {
+    if (pieceAt({f, src.rank})) return false;
+  }
   
   // Check if the king is in check
-  if (isInCheck(piece->colour())) return false;
+  if (isInCheck(piece->colour())) {
+    std::cout << "Cannot castle while in check." << std::endl;
+    return false;
+  }
   
   // Check if the king passes through or ends up in check
-  int step = isKingSideCastling ? 1 : -1;
   for (int f = src.file + step; f != src.file + 3*step; f += step) {
     if (f < 0 || f > 7) break;
     
-    if (isSquareAttacked({f, src.rank}, piece->colour())) return false;
+    // Check if king would be in check at this position
+    if (isSquareAttacked({f, src.rank}, piece->colour())) {
+      std::cout << "Cannot castle through or into check." << std::endl;
+      return false;
+    }
   }
   
   return true;
