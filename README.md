@@ -15,6 +15,7 @@ A command-line chess game implemented in C++20 for CS246 Spring 2025.
 - `move <src> <dst> <promotion>` - Move a pawn with promotion (e.g., `move e7 e8 Q`)
   - Valid promotion pieces: Q (Queen), R (Rook), B (Bishop), N (Knight)
 - `resign` - Resign the current game
+- `score` - Displays the current score
 - Ctrl-D to quit
 
 ## Building

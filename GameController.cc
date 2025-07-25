@@ -70,13 +70,15 @@ bool GameController::processCommand(const std::string& cmd) {
       Colour currentPlayerColour = board->getCurrentTurn();
       if (board->isInCheck(currentPlayerColour)) {
         if (board->isCheckmate(currentPlayerColour)) {
-          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!\n";
+          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!" << std::endl;
+          incrementScore(currentPlayerColour == Colour::White ? Colour::Black : Colour::White);
           gameInProgress = false;
         } else {
-          std::cout << "Check!\n";
+          std::cout << "Check!" << std::endl;
         }
       } else if (board->isStalemate(currentPlayerColour)) {
-        std::cout << "Stalemate! The game is a draw.\n";
+        std::cout << "Stalemate! The game is a draw." << std::endl;
+        incrementDrawScore();
         gameInProgress = false;
       }
     } else {
@@ -120,13 +122,15 @@ bool GameController::processCommand(const std::string& cmd) {
       if (board->isInCheck(currentPlayerColour)) {
         // Check if it's checkmate
         if (board->isCheckmate(currentPlayerColour)) {
-          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!\n";
+          std::cout << (currentPlayerColour == Colour::White ? "Black" : "White") << " wins!" << std::endl;
+          incrementScore(currentPlayerColour == Colour::White ? Colour::Black : Colour::White);
           gameInProgress = false;
         } else {
-          std::cout << "Check!\n";
+          std::cout << "Check!" << std::endl;
         }
       } else if (board->isStalemate(currentPlayerColour)) {
-        std::cout << "Stalemate! The game is a draw.\n";
+        std::cout << "Stalemate! The game is a draw." << std::endl;
+        incrementDrawScore();
         gameInProgress = false;
       }
     } else {
@@ -139,8 +143,12 @@ bool GameController::processCommand(const std::string& cmd) {
     }
     
     // According to the baseline example, we just print "Black wins!"
-    std::cout << "Black wins!\n";
+    std::cout << "Black wins!" << std::endl;
+    incrementScore(Colour::Black);
     gameInProgress = false;
+  } else if (command == "score") {
+    printScore();
+    return true;
   } else if (command.empty()) {
     // Empty command, just continue
   } else {
@@ -159,4 +167,30 @@ void GameController::run() {
       break;
     }
   }
+  printFinalScore();
+} 
+
+void GameController::incrementScore(Colour winner) {
+    if (winner == Colour::White) {
+        whiteScore += 1.0;
+    } else if (winner == Colour::Black) {
+        blackScore += 1.0;
+    }
+}
+
+void GameController::incrementDrawScore() {
+    whiteScore += 0.5;
+    blackScore += 0.5;
+}
+
+void GameController::printScore() const {
+    std::cout << "Score:" << std::endl;
+    std::cout << "White: " << whiteScore << std::endl;
+    std::cout << "Black: " << blackScore << std::endl;
+}
+
+void GameController::printFinalScore() const {
+    std::cout << "Final Score:" << std::endl;
+    std::cout << "White: " << whiteScore << std::endl;
+    std::cout << "Black: " << blackScore << std::endl;
 } 
