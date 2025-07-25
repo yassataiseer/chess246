@@ -17,6 +17,7 @@ public:
   std::shared_ptr<Piece> pieceAt(Pos p) const;
   bool isInCheck(Colour c) const;
   bool isCheckmate(Colour c) const;        // check if player is in checkmate
+  bool isStalemate(Colour c) const;        // check if player has no legal moves but is not in check
   bool isValidPos(Pos p) const;
   bool canEnPassantCapture(Pos src, Pos dst) const;  // check if en passant capture is possible
   bool canCastle(Pos src, Pos dst) const;  // check if castling is legal
