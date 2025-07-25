@@ -44,6 +44,10 @@ Board::Board() : grid(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), curre
   grid[7][7] = std::make_shared<Rook>(Colour::Black);
 }
 
+Board::~Board() {
+  // No cleanup needed
+}
+
 bool Board::isValidPos(Pos p) const {
   return p.file >= 0 && p.file < 8 && p.rank >= 0 && p.rank < 8;
 }
@@ -295,7 +299,7 @@ bool Board::move(Pos src, Pos dst, char promotionPiece) {
   } else {
     // Check if this is a valid pawn promotion
     bool isPawnPromotion = false;
-    if (auto pawn = dynamic_cast<Pawn*>(piece.get())) {
+    if (dynamic_cast<Pawn*>(piece.get())) {
       if ((piece->colour() == Colour::White && dst.rank == 7) ||
           (piece->colour() == Colour::Black && dst.rank == 0)) {
         isPawnPromotion = true;
@@ -560,7 +564,6 @@ bool Board::isSquareAttacked(Pos square, Colour defendingColour) const {
       if (piece && piece->colour() != defendingColour) {
         // Check if this piece can attack the square
         bool canAttack = false;
-        Pos piecePos{file, rank};
         
         // Check based on piece type
         if (piece->symbol() == 'P' || piece->symbol() == 'p') {
