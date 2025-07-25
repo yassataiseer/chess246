@@ -14,6 +14,12 @@ public:
 private:
   std::shared_ptr<Board> board;
   bool gameInProgress;
+  double whiteScore = 0.0;
+  double blackScore = 0.0;
+  void printFinalScore() const;
+  void printScore() const;
+  void incrementScore(Colour winner);
+  void incrementDrawScore();
   bool processCommand(const std::string& cmd);
   Pos parsePos(const std::string& pos);
 };
