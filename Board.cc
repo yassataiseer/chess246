@@ -213,6 +213,40 @@ bool Board::isCheckmate(Colour c) const {
   return true;
 }
 
+bool Board::isStalemate(Colour c) const {
+  // First check if the player is in check - if so, it's not stalemate
+  if (isInCheck(c)) {
+    return false;
+  }
+  
+  // Try all possible moves for all pieces of the player
+  for (int srcRank = 0; srcRank < 8; ++srcRank) {
+    for (int srcFile = 0; srcFile < 8; ++srcFile) {
+      Pos src{srcFile, srcRank};
+      auto piece = pieceAt(src);
+      
+      // Skip if no piece or not the player's piece
+      if (!piece || piece->colour() != c) {
+        continue;
+      }
+      
+      // Get all legal moves for this piece
+      auto legalMoves = piece->legalMoves(*this, src);
+      
+      // Try each move to see if it's legal
+      for (const auto& dst : legalMoves) {
+        if (simulateMove(src, dst, c)) {
+          // Found a legal move, so not stalemate
+          return false;
+        }
+      }
+    }
+  }
+  
+  // No legal moves found and not in check = stalemate
+  return true;
+}
+
 std::shared_ptr<Piece> Board::createPromotedPiece(char pieceType, Colour c) {
   switch (toupper(pieceType)) {
     case 'Q': return std::make_shared<Queen>(c);

@@ -66,7 +66,7 @@ bool GameController::processCommand(const std::string& cmd) {
     if (success) {
       board->draw(std::cout);
       
-      // Check for check/checkmate
+      // Check for check/checkmate/stalemate
       Colour currentPlayerColour = board->getCurrentTurn();
       if (board->isInCheck(currentPlayerColour)) {
         if (board->isCheckmate(currentPlayerColour)) {
@@ -75,6 +75,9 @@ bool GameController::processCommand(const std::string& cmd) {
         } else {
           std::cout << "Check!\n";
         }
+      } else if (board->isStalemate(currentPlayerColour)) {
+        std::cout << "Stalemate! The game is a draw.\n";
+        gameInProgress = false;
       }
     } else {
       std::cout << "Invalid castling move.\n";
@@ -122,6 +125,9 @@ bool GameController::processCommand(const std::string& cmd) {
         } else {
           std::cout << "Check!\n";
         }
+      } else if (board->isStalemate(currentPlayerColour)) {
+        std::cout << "Stalemate! The game is a draw.\n";
+        gameInProgress = false;
       }
     } else {
       std::cout << "Invalid move.\n";
