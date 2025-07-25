@@ -51,12 +51,17 @@ int main() {
   bool gameActive = false;
   bool gameOver = false;
   
+  // Score tracking
+  double whiteScore = 0.0;
+  double blackScore = 0.0;
+  
   std::cout << "Chess Game\n";
   std::cout << "Enter commands:\n";
   std::cout << "  - game human human (start a new game)\n";
   std::cout << "  - move <from> <to> [promotion] (e.g., 'move e2 e4')\n";
   std::cout << "  - resign (give up the game)\n";
   std::cout << "  - draw (show the board)\n";
+  std::cout << "  - score (display current score)\n";
   std::cout << "  - quit or exit (quit the game)\n";
   
   bool running = true;
@@ -109,6 +114,14 @@ int main() {
       } else {
         std::cout << (board->getCurrentTurn() == Colour::White ? "White" : "Black") << " resigns. ";
         std::cout << (board->getCurrentTurn() == Colour::White ? "Black" : "White") << " wins!" << std::endl;
+        
+        // Update score
+        if (board->getCurrentTurn() == Colour::White) {
+          blackScore += 1.0;
+        } else {
+          whiteScore += 1.0;
+        }
+        
         gameOver = true;
         
         // Close the graphics window after a short delay
@@ -118,6 +131,11 @@ int main() {
           graphicsActive = false;
         }
       }
+    } else if (command == "score") {
+      // Display the current score
+      std::cout << "Score:" << std::endl;
+      std::cout << "White: " << whiteScore << std::endl;
+      std::cout << "Black: " << blackScore << std::endl;
     } else if (command.substr(0, 4) == "move") {
       if (!gameActive || gameOver) {
         std::cout << "No active game. Start with 'game human human'.\n";
@@ -173,6 +191,14 @@ int main() {
           if (board->isCheckmate(nextPlayer)) {
             Colour winner = (nextPlayer == Colour::White) ? Colour::Black : Colour::White;
             std::cout << "Checkmate! " << (winner == Colour::White ? "White" : "Black") << " wins!" << std::endl;
+            
+            // Update score
+            if (winner == Colour::White) {
+              whiteScore += 1.0;
+            } else {
+              blackScore += 1.0;
+            }
+            
             gameOver = true;
             
             // Close the graphics window after a short delay
@@ -184,6 +210,22 @@ int main() {
           } else {
             std::cout << "Check!" << std::endl;
           }
+        } else if (board->isStalemate(nextPlayer)) {
+          // Stalemate - game is a draw
+          std::cout << "Stalemate! The game is a draw." << std::endl;
+          
+          // Update score - half point to each player
+          whiteScore += 0.5;
+          blackScore += 0.5;
+          
+          gameOver = true;
+          
+          // Close the graphics window after a short delay
+          if (graphicsActive && graphics) {
+            sleep(2); // Give user a moment to see the stalemate position
+            graphics->closeWindow();
+            graphicsActive = false;
+          }
         }
       }
     } else if (command == "help") {
@@ -192,6 +234,7 @@ int main() {
       std::cout << "  move <from> <to> [promotion] - Move a piece (e.g., 'move e2 e4')\n";
       std::cout << "  resign - Forfeit the game\n";
       std::cout << "  draw - Show the current board state\n";
+      std::cout << "  score - Display the current score\n";
       std::cout << "  help - Show this help message\n";
       std::cout << "  quit/exit - Exit the game\n";
     } else {
@@ -220,6 +263,11 @@ int main() {
   if (graphicsActive && graphics) {
     graphics->closeWindow();
   }
+  
+  // Display final score
+  std::cout << "Final Score:" << std::endl;
+  std::cout << "White: " << whiteScore << std::endl;
+  std::cout << "Black: " << blackScore << std::endl;
   
   std::cout << "Game ended." << std::endl;
   return 0;
