@@ -11,6 +11,7 @@
 class Board {
 public:
   Board();
+  ~Board();
   bool move(Pos src, Pos dst);             // applies move if legal
   bool move(Pos src, Pos dst, char promotionPiece); // applies move with promotion if legal
   void draw(std::ostream& os) const;       // ASCII draw
@@ -34,6 +35,7 @@ public:
   bool hasRookMoved(Colour c, bool kingSide) const;
   bool isPathClear(Pos from, Pos to) const;
   bool isSquareAttacked(Pos square, Colour defendingColour) const;
+
 private:
   std::vector<std::vector<std::shared_ptr<Piece>>> grid;
   Colour currentTurn;
@@ -48,7 +50,7 @@ private:
   
   // Tracking for en passant
   Pos lastPawnDoubleMove = {-1, -1};  // Invalid position by default
-  
+
   bool simulateMove(Pos src, Pos dst, Colour playerColour) const; // simulate move to check if it leaves player in check
   std::shared_ptr<Piece> createPromotedPiece(char pieceType, Colour c); // create a piece for promotion
   
