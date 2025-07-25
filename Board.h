@@ -23,6 +23,12 @@ public:
   bool canCastle(Pos src, Pos dst) const;  // check if castling is legal
   Colour getCurrentTurn() const;           // get the current player's color
   
+  // Setup mode methods
+  void placePiece(Pos pos, char pieceType, Colour colour);  // place a piece during setup
+  void removePiece(Pos pos);                               // remove a piece during setup
+  void setCurrentTurn(Colour c);                           // set the current player's turn
+  void clearBoard();                                       // clear the board for setup mode
+  
   // Helper methods for King's legal moves
   bool hasKingMoved(Colour c) const;
   bool hasRookMoved(Colour c, bool kingSide) const;
